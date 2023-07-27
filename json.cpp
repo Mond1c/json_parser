@@ -115,6 +115,44 @@ Value &Value::operator[](const std::string &key) {
     return *to_object()[key];
 }
 
+bool Json::contains_key(const std::string &key) const {
+    return object.count(key);
+}
+
+const Value &Json::operator[](const std::string &key) const {
+    if (!contains_key(key)) {
+        throw std::runtime_error("This key doesn't exist");
+    }
+    return *object.at(key);
+}
+
+Value &Json::operator[](const std::string &key) {
+    if (!contains_key(key)) {
+        object[key] = std::make_shared<Value>(Value::new_value(nullptr));
+    }
+    return *object[key];
+}
+
+std::size_t Json::size() const {
+    return object.size();
+}
+
+Json::iterator Json::begin() {
+    return object.begin();
+}
+
+Json::const_iterator Json::begin() const {
+    return object.begin();
+}
+
+Json::iterator Json::end() {
+    return object.end();
+}
+
+Json::const_iterator Json::end() const {
+    return object.end();
+}
+
 static std::string parse_string(std::istream &s, char &ch) {
     std::string key;
     while (s >> ch && ch != '\"') {
@@ -234,44 +272,6 @@ Json json::parse_json(std::istream &s, char last_char) {
         }
     }
     return ans;
-}
-
-bool Json::contains_key(const std::string &key) const {
-    return object.count(key);
-}
-
-const Value &Json::operator[](const std::string &key) const {
-    if (!contains_key(key)) {
-        throw std::runtime_error("This key doesn't exist");
-    }
-    return *object.at(key);
-}
-
-Value &Json::operator[](const std::string &key) {
-    if (!contains_key(key)) {
-        object[key] = std::make_shared<Value>(Value::new_value(nullptr));
-    }
-    return *object[key];
-}
-
-std::size_t Json::size() const {
-    return object.size();
-}
-
-Json::iterator Json::begin() {
-    return object.begin();
-}
-
-Json::const_iterator Json::begin() const {
-    return object.begin();
-}
-
-Json::iterator Json::end() {
-    return object.end();
-}
-
-Json::const_iterator Json::end() const {
-    return object.end();
 }
 
 static void dump_string(std::ostream& out, const std::string& str) {
