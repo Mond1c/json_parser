@@ -194,6 +194,9 @@ static std::string parse_string(std::istream &s, char &ch) {
     while (s >> ch && ch != '\"') {
         key += std::string(1, ch);
     }
+    if (ch != '\"') {
+        throw std::runtime_error("JSON: Excepted \"");
+    }
     return key;
 }
 
@@ -281,7 +284,7 @@ Json json::parse_json(std::istream &s, char last_char) {
         }
     }
     while (s >> ch) {
-        if (ch == ' ') continue;
+        if (ch == ' ' || ch == '\n' || ch == ',') continue;
         if (ch == '\"' && key.empty()) {
             key = parse_string(s, ch);
         } else if (ch == ':') {
@@ -289,24 +292,41 @@ Json json::parse_json(std::istream &s, char last_char) {
         } else if (ch == '}') {
             break;
         } else {
+            if (key.empty()) {
+                throw std::runtime_error("JSON: Empty key");
+            }
             if (ch == '\"') {
                 ans[key] = Value::new_value(parse_string(s, ch));
+                key.clear();
             } else if (isdigit(ch)) {
                 ans[key] = Value::new_value(parse_uint64(s, ch));
+                key.clear();
             } else if (ch == '{') {
                 ans[key] = Value::new_value(parse_json(s, ch));
+                key.clear();
             } else if (ch == '[') {
                 ans[key] = Value::new_value(parse_array(s, ch));
+                key.clear();
             } else if (ch == 't' || ch == 'f') {
                 ans[key] = Value::new_value(parse_boolean(s, ch));
+                key.clear();
             } else if (ch == 'n') {
                 ans[key] = Value::new_value(parse_null(s));
+                key.clear();
+            } else {
+                throw std::runtime_error("JSON: Excepted correct value type.");
             }
             if (ch == '}') {
+                if (!key.empty()) {
+                    throw std::runtime_error("JSON: Excepted correct value type.");
+                }
+                key.clear();
                 break;
             }
-            key.clear();
         }
+    }
+    if (!key.empty()) {
+        throw std::runtime_error("JSON: Excepted correct value type.");
     }
     return ans;
 }
