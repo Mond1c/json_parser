@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 project(json_test)
 
-set(SOURCE_FILES "simple_test.cpp")
+set(SOURCE_FILES "simple_test.cpp" value_compare_test.cpp)
 
 add_executable(json_test ${SOURCE_FILES})
 

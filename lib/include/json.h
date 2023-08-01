@@ -150,6 +150,7 @@ namespace json {
         Value &operator[](const std::string &key);
 
         friend bool operator==(const Value &lhs, const Value &rhs);
+        friend bool operator!=(const Value& lhs, const Value& rhs);
 
     private:
 

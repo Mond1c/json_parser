@@ -147,6 +147,10 @@ bool json::operator==(const Value &lhs, const Value &rhs) {
     return true;
 }
 
+bool json::operator!=(const Value &lhs, const Value &rhs) {
+   return !(lhs == rhs);
+}
+
 bool Json::contains_key(const std::string &key) const {
     return object.count(key);
 }
