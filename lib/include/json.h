@@ -22,9 +22,8 @@ namespace json {
     class Value;
 
     class Json {
-    private:
-        using json_object = std::unordered_map<std::string, std::shared_ptr<Value>>;
     public:
+        using json_object = std::unordered_map<std::string, std::shared_ptr<Value>>;
         using iterator = json_object::iterator;
         using const_iterator = json_object::const_iterator;
     public:
@@ -150,7 +149,8 @@ namespace json {
         Value &operator[](const std::string &key);
 
         friend bool operator==(const Value &lhs, const Value &rhs);
-        friend bool operator!=(const Value& lhs, const Value& rhs);
+
+        friend bool operator!=(const Value &lhs, const Value &rhs);
 
     private:
 

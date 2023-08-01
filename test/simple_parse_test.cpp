@@ -2,12 +2,12 @@
 #include <gtest/gtest.h>
 
 namespace {
-    struct simple_test : ::testing::Test {
+    struct simple_parse_test : ::testing::Test {
 
     };
 }
 
-TEST_F(simple_test, number_test) {
+TEST_F(simple_parse_test, number_test) {
     const std::string raw_json = "{\"number\": 30}";
     std::stringstream ss(raw_json);
     const json::Json obj = json::parse_json(ss);
@@ -16,7 +16,7 @@ TEST_F(simple_test, number_test) {
     ASSERT_EQ(obj["number"].to_uint64(), 30);
 }
 
-TEST_F(simple_test, string_test) {
+TEST_F(simple_parse_test, string_test) {
     const std::string raw_json = R"({"name": "Jake"})";
     std::stringstream ss(raw_json);
     const json::Json obj = json::parse_json(ss);
@@ -25,7 +25,7 @@ TEST_F(simple_test, string_test) {
     ASSERT_EQ(obj["name"].to_string(), "Jake");
 }
 
-TEST_F(simple_test, boolean_test) {
+TEST_F(simple_parse_test, boolean_test) {
     const std::string raw_json = "{\"value\": true}";
     std::stringstream ss(raw_json);
     const json::Json obj = json::parse_json(ss);
@@ -34,7 +34,7 @@ TEST_F(simple_test, boolean_test) {
     ASSERT_TRUE(obj["value"].to_boolean());
 }
 
-TEST_F(simple_test, null_test) {
+TEST_F(simple_parse_test, null_test) {
     const std::string raw_json = "{\"value\": null}";
     std::stringstream ss(raw_json);
     const json::Json obj = json::parse_json(ss);
@@ -43,7 +43,7 @@ TEST_F(simple_test, null_test) {
     ASSERT_EQ(obj["value"].to_null(), nullptr);
 }
 
-TEST_F(simple_test, array_test) {
+TEST_F(simple_parse_test, array_test) {
     const std::vector<std::string> array = {"Jake", "Tom"};
     const std::string raw_json = R"({"array": ["Jake", "Tom"]})";
     std::stringstream ss(raw_json);
@@ -54,7 +54,7 @@ TEST_F(simple_test, array_test) {
 }
 
 
-TEST_F(simple_test, object_test) {
+TEST_F(simple_parse_test, object_test) {
     std::map<std::string, std::shared_ptr<json::Value>> object;
     object["name"] = std::make_shared<json::Value>(json::Value::new_value(std::string("Tom")));
     object["age"] = std::make_shared<json::Value>(json::Value::new_value(std::uint64_t(30)));

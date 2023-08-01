@@ -40,7 +40,7 @@ TEST_F(value_compare_test, null_test) {
 TEST_F(value_compare_test, array_test) {
     std::vector<std::string> arr = {"Tom", "Jake"};
     auto v1 = json::Value::new_value(arr);
-    auto v2 =  json::Value::new_value(arr);
+    auto v2 = json::Value::new_value(arr);
     auto v3 = json::Value::new_value(std::vector<std::string>{"Tom"});
     ASSERT_EQ(v1, v2);
     ASSERT_NE(v1, v3);
