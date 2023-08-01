@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <memory>
 #include <iostream>
+#include <algorithm>
 
 using namespace json;
 
@@ -115,6 +116,37 @@ Value &Value::operator[](const std::string &key) {
     return *to_object()[key];
 }
 
+bool json::operator==(const Value &lhs, const Value &rhs) {
+    if (lhs.value_type != rhs.value_type) {
+        return false;
+    }
+    if (lhs.is_object()) {
+        if (lhs.to_object().size() != rhs.to_object().size()) {
+            return false;
+        }
+        return std::all_of(lhs.to_object().begin(), lhs.to_object().end(),
+                           [&rhs](const auto &item) {
+                               return rhs.to_object().count(item.first) && *item.second == rhs[item.first];
+                           });
+    }
+    if (lhs.is_array()) {
+        if (lhs.to_array().size() != rhs.to_array().size()) {
+            return false;
+        }
+        return std::equal(lhs.to_array().begin(), lhs.to_array().end(), rhs.to_array().begin());
+    }
+    if (lhs.is_uint64()) {
+        return lhs.to_uint64() == rhs.to_uint64();
+    }
+    if (lhs.is_boolean()) {
+        return lhs.to_boolean() == rhs.to_boolean();
+    }
+    if (lhs.is_string()) {
+        return lhs.to_string() == rhs.to_string();
+    }
+    return true;
+}
+
 bool Json::contains_key(const std::string &key) const {
     return object.count(key);
 }
@@ -222,6 +254,7 @@ static std::nullptr_t parse_null(std::istream &s) {
     char ch;
     s >> ch;
     if (ch == 'u' && s >> ch && ch == 'l' && s >> ch && ch == 'l') {
+        s >> ch;
         while (ch == ' ') {
             s >> ch;
         }
@@ -274,17 +307,17 @@ Json json::parse_json(std::istream &s, char last_char) {
     return ans;
 }
 
-static void dump_string(std::ostream& out, const std::string& str) {
+static void dump_string(std::ostream &out, const std::string &str) {
     out << '\"';
     out << str;
     out << '\"';
 }
 
-static void dump_uint64(std::ostream& out, std::uint64_t value) {
+static void dump_uint64(std::ostream &out, std::uint64_t value) {
     out << value;
 }
 
-static void dump_boolean(std::ostream& out, bool value) {
+static void dump_boolean(std::ostream &out, bool value) {
     if (value) {
         out << "true";
     } else {
@@ -292,11 +325,11 @@ static void dump_boolean(std::ostream& out, bool value) {
     }
 }
 
-static void dump_null(std::ostream& out) {
+static void dump_null(std::ostream &out) {
     out << "null";
 }
 
-static void dump_array(std::ostream& out, const std::vector<std::string>& array) {
+static void dump_array(std::ostream &out, const std::vector<std::string> &array) {
     out << '[';
     for (std::size_t i = 0; i < array.size(); i++) {
         if (i != 0) {
@@ -310,7 +343,7 @@ static void dump_array(std::ostream& out, const std::vector<std::string>& array)
 void json::dump_json(std::ostream &out, const json::Json &object) {
     out << "{\n";
     std::size_t count = 0;
-    for (const auto& item : object) {
+    for (const auto &item: object) {
         dump_string(out, item.first);
         out << ": ";
         if (item.second->is_string()) {

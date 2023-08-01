@@ -29,7 +29,8 @@ namespace json {
         using const_iterator = json_object::const_iterator;
     public:
         Json() = default;
-        explicit Json(json_object  obj) : object(std::move(obj)) {}
+
+        explicit Json(json_object obj) : object(std::move(obj)) {}
 
         std::size_t size() const;
 
@@ -40,10 +41,13 @@ namespace json {
         Value &operator[](const std::string &key);
 
         iterator begin();
+
         const_iterator begin() const;
 
         iterator end();
+
         const_iterator end() const;
+
     private:
 
         json_object object;
@@ -53,9 +57,10 @@ namespace json {
 
     class Value {
     public:
-       // Value() = default;
-        Value(const Value&) = default;
-        Value& operator=(const Value& v) = default;
+        // Value() = default;
+        Value(const Value &) = default;
+
+        Value &operator=(const Value &v) = default;
 
         static Value new_value(uint64_t value) {
             Value instance;
@@ -144,6 +149,8 @@ namespace json {
 
         Value &operator[](const std::string &key);
 
+        friend bool operator==(const Value &lhs, const Value &rhs);
+
     private:
 
         Value() = default;
@@ -159,5 +166,6 @@ namespace json {
 
 
     Json parse_json(std::istream &s, char last_char = ' ');
-    void dump_json(std::ostream& out, const Json& object);
+
+    void dump_json(std::ostream &out, const Json &object);
 } // namespace json
