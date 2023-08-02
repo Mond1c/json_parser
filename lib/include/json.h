@@ -7,6 +7,7 @@
 #include <string>
 #include <memory>
 #include <sstream>
+#include <algorithm>
 
 namespace json {
 
@@ -85,7 +86,15 @@ namespace json {
             return instance;
         }
 
-        static Value new_value(const std::vector<std::string> &array) {
+        static Value new_value(const std::vector<std::shared_ptr<Value>> &array) {
+            if (!array.empty()) {
+                const ValueType type = array.front()->value_type;
+                if (!std::all_of(array.begin(), array.end(), [&type](const auto &item) {
+                    return item->value_type == type;
+                })) {
+                    throw std::runtime_error("JSON: Array can contains only values with similar types.");
+                }
+            }
             Value instance;
             instance.array_value = array;
             instance.value_type = ValueType::Array;
@@ -124,7 +133,7 @@ namespace json {
 
         const std::unordered_map<std::string, std::shared_ptr<Value>> &to_object() const;
 
-        const std::vector<std::string> &to_array() const;
+        const std::vector<std::shared_ptr<Value>> &to_array() const;
 
         bool to_boolean() const;
 
@@ -136,7 +145,7 @@ namespace json {
 
         std::unordered_map<std::string, std::shared_ptr<Value>> &to_object();
 
-        std::vector<std::string> &to_array();
+        std::vector<std::shared_ptr<Value>> &to_array();
 
         bool &to_boolean();
 
@@ -161,7 +170,7 @@ namespace json {
         std::uint64_t uint64_value{};
         std::string string_value;
         std::unordered_map<std::string, std::shared_ptr<Value>> object_value;
-        std::vector<std::string> array_value;
+        std::vector<std::shared_ptr<Value>> array_value;
         bool boolean_value{};
     };
 

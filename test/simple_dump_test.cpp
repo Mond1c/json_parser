@@ -42,7 +42,9 @@ TEST_F(simple_dump_test, null_test) {
 TEST_F(simple_dump_test, array_test) {
     std::stringstream ss;
     json::Json::json_object obj;
-    obj["array"] = std::make_shared<json::Value>(json::Value::new_value(std::vector<std::string>{"Tom", "Jake"}));
+    obj["array"] = std::make_shared<json::Value>(json::Value::new_value(std::vector<std::shared_ptr<json::Value>>{
+            std::make_shared<json::Value>(json::Value::new_value(std::string("Tom"))),
+            std::make_shared<json::Value>(json::Value::new_value(std::string("Jake")))}));
     json::dump_json(ss, json::Json(obj));
     ASSERT_EQ(ss.str(), "{\n\"array\": [\"Tom\", \"Jake\"]\n}\n");
 }

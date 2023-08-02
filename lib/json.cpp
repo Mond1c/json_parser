@@ -48,7 +48,7 @@ const std::unordered_map<std::string, std::shared_ptr<Value>> &Value::to_object(
     return object_value;
 }
 
-const std::vector<std::string> &Value::to_array() const {
+const std::vector<std::shared_ptr<Value>> &Value::to_array() const {
     CHECK_TYPE(is_array)
     return array_value;
 }
@@ -78,7 +78,7 @@ std::unordered_map<std::string, std::shared_ptr<Value>> &Value::to_object() {
     return object_value;
 }
 
-std::vector<std::string> &Value::to_array() {
+std::vector<std::shared_ptr<Value>> &Value::to_array() {
     CHECK_TYPE(is_array)
     return array_value;
 }
@@ -205,7 +205,7 @@ static std::uint64_t parse_uint64(std::istream &s, char &ch) {
     while (s >> ch && isdigit(ch)) {
         ans = ans * 10 + (ch - '0');
     }
-    if (ch != ' ' && ch != ',' && ch != '}') {
+    if (ch != ' ' && ch != ',' && ch != '}' && ch != ']') {
         throw std::runtime_error("JSON: excepted ,");
     }
     return ans;
@@ -227,7 +227,7 @@ static bool parse_boolean(std::istream &s, char &ch) {
         while (ch == ' ') {
             s >> ch;
         }
-        if (ch != ',' && ch != '}') {
+        if (ch != ',' && ch != '}' && ch != ']') {
             throw std::runtime_error("JSON: excepted , or }");
         }
         return false;
@@ -235,13 +235,42 @@ static bool parse_boolean(std::istream &s, char &ch) {
     throw std::runtime_error("JSON: Incorrect value");
 }
 
-static std::vector<std::string> parse_array(std::istream &s, char &ch) {
-    std::vector<std::string> ans;
+static std::nullptr_t parse_null(std::istream &s, char &ch) {
+    s >> ch;
+    if (ch == 'u' && s >> ch && ch == 'l' && s >> ch && ch == 'l') {
+        s >> ch;
+        while (ch == ' ') {
+            s >> ch;
+        }
+        if (ch != ',' && ch != '}' && ch != ']') {
+            throw std::runtime_error("JSON: excepted , or }");
+        }
+        return nullptr;
+    }
+    throw std::runtime_error("JSON: Incorrect value");
+}
+
+
+static std::vector<std::shared_ptr<Value>> parse_array(std::istream &s, char &ch) {
+    std::vector<std::shared_ptr<Value>> ans;
     while (s >> ch && ch != ']') {
         if (ch == '\"') {
-            ans.push_back(parse_string(s, ch));
+            ans.push_back(std::make_shared<Value>(Value::new_value(parse_string(s, ch))));
+        } else if (isdigit(ch)) {
+            ans.push_back(std::make_shared<Value>(Value::new_value(parse_uint64(s, ch))));
+        } else if (ch == 't' || ch == 'f') {
+            ans.push_back(std::make_shared<Value>(Value::new_value(parse_boolean(s, ch))));
+        } else if (ch == 'n') {
+            ans.push_back(std::make_shared<Value>(Value::new_value(parse_null(s, ch))));
+        } else if (ch == '[') {
+            ans.push_back(std::make_shared<Value>(Value::new_value(parse_array(s, ch))));
+        } else if (ch == '{') {
+            ans.push_back(std::make_shared<Value>(Value::new_value(parse_json(s, ch))));
         } else if (ch != ' ' && ch != ',') {
             throw std::runtime_error("JSON: Incorrect array");
+        }
+        if (ch == ']') {
+            break;
         }
     }
     if (ch != ']') {
@@ -251,26 +280,10 @@ static std::vector<std::string> parse_array(std::istream &s, char &ch) {
     while (ch == ' ') {
         s >> ch;
     }
-    if (ch != ',' && ch != '}') {
+    if (ch != ',' && ch != '}' && ch != ']') {
         throw std::runtime_error("JSON: excepted , or }");
     }
     return ans;
-}
-
-static std::nullptr_t parse_null(std::istream &s) {
-    char ch;
-    s >> ch;
-    if (ch == 'u' && s >> ch && ch == 'l' && s >> ch && ch == 'l') {
-        s >> ch;
-        while (ch == ' ') {
-            s >> ch;
-        }
-        if (ch != ',' && ch != '}') {
-            throw std::runtime_error("JSON: excepted , or }");
-        }
-        return nullptr;
-    }
-    throw std::runtime_error("JSON: Incorrect value");
 }
 
 Json json::parse_json(std::istream &s, char last_char) {
@@ -311,7 +324,7 @@ Json json::parse_json(std::istream &s, char last_char) {
                 ans[key] = Value::new_value(parse_boolean(s, ch));
                 key.clear();
             } else if (ch == 'n') {
-                ans[key] = Value::new_value(parse_null(s));
+                ans[key] = Value::new_value(parse_null(s, ch));
                 key.clear();
             } else {
                 throw std::runtime_error("JSON: Excepted correct value type.");
@@ -353,13 +366,25 @@ static void dump_null(std::ostream &out) {
     out << "null";
 }
 
-static void dump_array(std::ostream &out, const std::vector<std::string> &array) {
+static void dump_array(std::ostream &out, const std::vector<std::shared_ptr<Value>> &array) {
     out << '[';
     for (std::size_t i = 0; i < array.size(); i++) {
         if (i != 0) {
             out << ", ";
         }
-        dump_string(out, array[i]);
+        if (array[i]->is_string()) {
+            dump_string(out, array[i]->to_string());
+        } else if (array[i]->is_boolean()) {
+            dump_boolean(out, array[i]->to_boolean());
+        } else if (array[i]->is_uint64()) {
+            dump_uint64(out, array[i]->to_uint64());
+        } else if (array[i]->is_null()) {
+            dump_null(out);
+        } else if (array[i]->is_array()) {
+            dump_array(out, array[i]->to_array());
+        } else {
+            dump_json(out, Json(array[i]->to_object()));
+        }
     }
     out << ']';
 }
