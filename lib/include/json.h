@@ -56,7 +56,6 @@ namespace json {
 
     class Value {
     public:
-        // Value() = default;
         Value(const Value &) = default;
 
         Value &operator=(const Value &v) = default;
@@ -105,6 +104,7 @@ namespace json {
             instance.value_type = ValueType::Null;
             return instance;
         }
+
 
         bool is_uint64() const;
 
